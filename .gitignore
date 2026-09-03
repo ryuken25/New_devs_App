@@ -13,5 +13,11 @@ backend/.env
 # Vite leaves these behind after a dev run
 vite.config.ts.timestamp-*.mjs
 
-# Investigation write-up, submitted with the assignment rather than committed
+# Submission material, handed in with the assignment rather than committed
 NOTES.md
+VIDEO_SCRIPT.md
+_shots/
+run-local.ps1
+
+# submission artifacts
+FINDINGS.pdf
