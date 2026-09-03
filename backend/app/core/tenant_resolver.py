@@ -6,6 +6,12 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+KNOWN_TENANT_BY_EMAIL = {
+    "sunset@propertyflow.com": "tenant-a",
+    "ocean@propertyflow.com": "tenant-b",
+    "candidate@propertyflow.com": "tenant-a",
+}
+
 
 class TenantResolver:
     """Minimal tenant resolver that extracts tenant_id from JWT claims."""
@@ -69,33 +75,49 @@ class TenantResolver:
         return None
 
     @staticmethod
-    async def resolve_tenant_id(user_id: str, user_email: str, token: Optional[str] = None) -> str:
+    async def resolve_tenant_id(
+        user_id: str,
+        user_email: str,
+        token: Optional[str] = None,
+        app_metadata: Optional[dict] = None,
+        user_metadata: Optional[dict] = None,
+    ) -> Optional[str]:
         """
         Resolve tenant ID for a user.
-        
+
         Args:
             user_id: User ID
             user_email: User email
-            
+            app_metadata: Server-issued claims from the verified token
+            user_metadata: User-scoped claims from the verified token
+
         Returns:
-            Tenant ID
+            Tenant ID, or None when the user is not attached to a tenant.
         """
+        # The token has already been verified by the caller, so the tenant it
+        # carries is authoritative and is preferred over any local mapping.
+        for claims in (user_metadata, app_metadata):
+            if claims:
+                tenant_id = claims.get("tenant_id")
+                if tenant_id:
+                    return tenant_id
+
         # Fallback mapping by known user email.
-        if user_email == "sunset@propertyflow.com":
-            return "tenant-a"
-        if user_email == "ocean@propertyflow.com":
-            return "tenant-b"
-        if user_email == "candidate@propertyflow.com":
-            return "tenant-a"
-            
-        # Default fallback
-        return "tenant-a"
+        tenant_id = KNOWN_TENANT_BY_EMAIL.get((user_email or "").lower())
+        if tenant_id:
+            return tenant_id
+
+        # No tenant to fall back on. Returning some default here would let an
+        # unmapped account read another tenant's data, so callers get None and
+        # must refuse the request.
+        logger.warning("No tenant could be resolved for %s (%s)", user_email, user_id)
+        return None
 
     @staticmethod
     async def update_user_tenant_metadata(user_id: str, tenant_id: str) -> None:
         """
         Update user metadata with tenant_id.
-        
+
         Args:
             user_id: User ID
             tenant_id: Tenant ID

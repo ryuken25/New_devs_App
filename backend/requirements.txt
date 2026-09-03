@@ -21,6 +21,7 @@ sendgrid
 sqlalchemy>=2.0.0
 supabase
 tenacity>=8.0.0
+tzdata
 uvicorn[standard]
 wheel==0.45.1
 loguru

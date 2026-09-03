@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# Local environment overrides (frontend/.env is committed for the challenge)
+.env.local
+.env.*.local
+backend/.env
+
+# Vite leaves these behind after a dev run
+vite.config.ts.timestamp-*.mjs
+
+# Investigation write-up, submitted with the assignment rather than committed
+NOTES.md
